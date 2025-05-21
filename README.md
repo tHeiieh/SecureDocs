@@ -1,4 +1,4 @@
-# SecureDocs
+
 # SecureDocs
 
 SecureDocs is a secure document management web application built with Flask. It provides features such as user authentication with 2FA, file encryption, digital signatures, HMAC integrity checks, audit logging, and admin management.
