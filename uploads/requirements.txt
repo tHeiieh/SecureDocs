@@ -1,0 +1,7 @@
+Flask
+flask-sslify
+python-dotenv
+oauthlib
+requests
+PyJWT
+pyotp

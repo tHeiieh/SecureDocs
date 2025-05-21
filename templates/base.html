@@ -1,0 +1,346 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureDocs</title>
+    <!-- Critical Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-dark: #1a1e26;
+            --primary-teal: #44d1c2;
+            --secondary-blue: #7793f5;
+            --white: #ffffff;
+            --secondary-dark: #386466;
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            --card-border: 1px solid rgba(255, 255, 255, 0.1);
+            --glassmorphism-bg: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background-color: var(--primary-dark);
+            color: var(--white);
+        }
+
+        /* Glassmorphism Navbar */
+        .navbar {
+            background: rgba(56, 100, 102, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: var(--card-border);
+            padding: 15px 0;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-scrolled {
+            padding: 10px 0;
+            background: rgba(56, 100, 102, 0.95);
+        }
+
+        .navbar-brand {
+            color: var(--primary-teal);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            transform: translateY(-2px);
+        }
+
+        .navbar-brand i {
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: var(--white);
+            position: relative;
+            padding: 8px 15px;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--primary-teal);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 80%;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary-teal);
+            background: rgba(68, 209, 194, 0.1);
+        }
+
+        /* Responsive Navbar */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: rgba(56, 100, 102, 0.95);
+                padding: 1rem;
+                border-radius: 10px;
+                margin-top: 10px;
+            }
+
+            .navbar-nav {
+                align-items: flex-start;
+            }
+
+            .nav-link {
+                width: 100%;
+                margin-bottom: 5px;
+                text-align: left;
+            }
+        }
+
+        /* Animated Background */
+        .background-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .gradient-bg {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(-45deg, #233846, #2e576d, #337c9e, #44d1c2);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            top: -50%;
+            left: -50%;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-800px); opacity: 0; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(68, 209, 194, 0.5);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(68, 209, 194, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="background-wrapper">
+        <div class="gradient-bg"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand animate__animated animate__fadeIn" href="{{ url_for('dashboard') }}">
+                <i class='bx bx-shield-quarter'></i> SecureDocs
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('dashboard') }}">
+                                <i class='bx bx-home'></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('upload') }}">
+                                <i class='bx bx-upload'></i> Upload
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('list_files') }}">
+                                <i class='bx bx-folder'></i> Documents
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('profile') }}">
+                                <i class='bx bx-user'></i> Profile
+                            </a>
+                        </li>
+                        {% if current_user.role == 'Admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('manage_users') }}">
+                                    <i class='bx bx-cog'></i> Admin Panel
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">
+                                <i class='bx bx-log-out'></i> Logout
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">
+                                <i class='bx bx-log-in'></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">
+                                <i class='bx bx-user-plus'></i> Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="container mt-5 pt-4">
+                {% for message in messages %}
+                    <div class="alert alert-info animate__animated animate__fadeIn" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Content Block -->
+    {% block content %}
+    {% endblock %}
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script>
+        // Create animated background particles
+        function createParticles() {
+            const backgroundWrapper = document.querySelector('.background-wrapper');
+            const particleCount = 20;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+
+                const size = Math.random() * 60 + 20;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+
+                const delay = Math.random() * 10;
+                particle.style.animationDelay = `${delay}s`;
+
+                const duration = Math.random() * 10 + 10;
+                particle.style.animationDuration = `${duration}s`;
+
+                backgroundWrapper.appendChild(particle);
+            }
+        }
+
+        // Navbar scroll effect
+        function handleNavbarScroll() {
+            const navbar = document.querySelector('.navbar');
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('navbar-scrolled');
+                } else {
+                    navbar.classList.remove('navbar-scrolled');
+                }
+            });
+        }
+
+        // Initialize animations
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            handleNavbarScroll();
+        });
+    </script>
+</body>
+</html>

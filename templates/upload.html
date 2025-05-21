@@ -1,0 +1,370 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+</script>
+{% extends "base.html" %}
+{% block title %}Upload Document - SecureDocs{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+    .background-animation {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        overflow: hidden;
+    }
+    .particle {
+        position: absolute;
+        background: rgba(68, 209, 194, 0.3);
+        border-radius: 50%;
+        animation: float 15s infinite ease-in-out;
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0); opacity: 0.3; }
+        50% { transform: translateY(-20vh) translateX(10vw); opacity: 0.6; }
+    }
+    .upload-card {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(14px);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 480px;
+        color: #fff;
+        text-align: center;
+        margin: 60px auto;
+        animation: fadeIn 1s ease forwards;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .drop-zone {
+        border: 2px dashed rgba(255, 255, 255, 0.4);
+        padding: 30px;
+        border-radius: 14px;
+        cursor: pointer;
+        margin-bottom: 20px;
+        transition: 0.3s;
+    }
+    .drop-zone:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    .drop-zone.dragover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #44d1c2;
+    }
+    .file-info { margin-top: 12px; font-size: 0.9rem; }
+    .btn { padding: 12px 24px; border: none; border-radius: 50px; font-size: 16px; font-weight: 600; color: #fff; cursor: pointer; transition: 0.3s; margin: 8px 4px; }
+    .btn-primary { background: linear-gradient(45deg, #44d1c2, #7793f5); }
+    .btn-secondary { background: linear-gradient(45deg, #5a7f80, #386466); }
+    .btn-preview { background: linear-gradient(45deg, #ff6b6b, #ff8e53); }
+    .btn:disabled { background: rgba(255,255,255,0.2); cursor: not-allowed; }
+    .progress-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.15); margin-top: 20px; overflow: hidden; display: none; }
+    .progress-bar-inner { height: 100%; background: #44d1c2; width: 0; transition: 0.4s ease; }
+    .message { margin-top: 16px; padding: 10px; border-radius: 10px; display: none; font-size: 0.95rem; }
+    .message.success { background: rgba(68, 209, 194, 0.15); }
+    .message.error { background: rgba(255, 107, 107, 0.15); }
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(14px);
+        padding: 20px;
+        border-radius: 14px;
+        max-width: 80%;
+        max-height: 80%;
+        overflow: auto;
+        color: #fff;
+        position: relative;
+    }
+    .modal-content iframe, .modal-content pre {
+        width: 100%;
+        max-height: 60vh;
+        border: none;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+    }
+    .modal-content pre {
+        padding: 10px;
+        white-space: pre-wrap;
+        font-size: 0.9rem;
+    }
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+</style>
+
+<div class="background-animation" id="particleContainer"></div>
+
+<div class="container">
+    <div class="upload-card">
+        <h1>Upload Document</h1>
+        <form id="uploadForm" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token', '') }}">
+            <div class="drop-zone" id="dropZone">
+                <strong>Drag & Drop</strong> or click to select a file
+                <input type="file" id="fileInput" name="document" accept=".pdf,.docx,.txt" style="display:none" required>
+                <div class="file-info" id="fileInfo"></div>
+            </div>
+            <!-- Add description input -->
+            <div class="mb-3">
+                <textarea class="form-control bg-dark text-white" name="description" id="description" rows="2" placeholder="Enter a description for your file (optional)" style="border-radius: 10px; border: 1px solid rgba(16, 170, 197, 0.3);"></textarea>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>Upload</button>
+                <button type="button" class="btn btn-preview" id="previewBtn" disabled>Preview</button>
+                <button type="button" class="btn btn-secondary" id="clearBtn">Clear</button>
+            </div>
+        </form>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-bar-inner" id="progressInner"></div>
+        </div>
+
+        <div class="message" id="msgBox"></div>
+    </div>
+</div>
+
+<div class="modal" id="previewModal">
+    <div class="modal-content">
+        <button class="close-btn" id="closeModal">&times;</button>
+        <div id="previewContent"></div>
+    </div>
+</div>
+
+<script>
+    // Particle animation
+    const particleContainer = document.getElementById('particleContainer');
+    function createParticle() {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        const size = Math.random() * 10 + 5;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${Math.random() * 100}vw`;
+        particle.style.top = `${Math.random() * 100}vh`;
+        particle.style.animationDelay = `${Math.random() * 10}s`;
+        particleContainer.appendChild(particle);
+        setTimeout(() => particle.remove(), 15000);
+    }
+    for (let i = 0; i < 20; i++) {
+        setTimeout(createParticle, i * 500);
+    }
+    setInterval(createParticle, 1000);
+
+    // Upload functionality
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const previewBtn = document.getElementById('previewBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const progressBar = document.getElementById('progressBar');
+    const progressInner = document.getElementById('progressInner');
+    const msgBox = document.getElementById('msgBox');
+    const previewModal = document.getElementById('previewModal');
+    const previewContent = document.getElementById('previewContent');
+    const closeModal = document.getElementById('closeModal');
+    const uploadForm = document.getElementById('uploadForm');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        fileInput.files = e.dataTransfer.files;
+        handleFile();
+    });
+    fileInput.addEventListener('change', handleFile);
+
+    function handleFile() {
+        if (!fileInput.files.length) return;
+        const file = fileInput.files[0];
+        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+        fileInfo.textContent = `Selected: ${file.name} (${sizeMB} MB)`;
+        uploadBtn.disabled = false;
+        previewBtn.disabled = false;
+    }
+
+    uploadForm.addEventListener('submit', e => {
+        if (!fileInput.files.length) {
+            e.preventDefault();
+            msgBox.textContent = 'No file selected.';
+            msgBox.className = 'message error';
+            msgBox.style.display = 'block';
+            return;
+        }
+        progressBar.style.display = 'block';
+        progressInner.style.width = '0%';
+        msgBox.style.display = 'none';
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 20;
+            progressInner.style.width = Math.min(progress, 100) + '%';
+            if (progress >= 100) {
+                clearInterval(interval);
+            }
+        }, 300);
+    });
+
+    previewBtn.addEventListener('click', () => {
+        if (!fileInput.files.length) return;
+        const file = fileInput.files[0];
+        previewContent.innerHTML = '';
+        const fileType = file.name.split('.').pop().toLowerCase();
+
+        if (fileType === 'pdf') {
+            const url = URL.createObjectURL(file);
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            previewContent.appendChild(iframe);
+        } else if (fileType === 'txt') {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const pre = document.createElement('pre');
+                pre.textContent = e.target.result;
+                previewContent.appendChild(pre);
+            };
+            reader.readAsText(file);
+        } else {
+            msgBox.textContent = 'Preview not available for this file type.';
+            msgBox.className = 'message error';
+            msgBox.style.display = 'block';
+            return;
+        }
+
+        previewModal.style.display = 'flex';
+    });
+
+    closeModal.addEventListener('click', () => {
+        previewModal.style.display = 'none';
+        previewContent.innerHTML = '';
+    });
+
+    previewModal.addEventListener('click', e => {
+        if (e.target === previewModal) {
+            previewModal.style.display = 'none';
+            previewContent.innerHTML = '';
+        }
+    });
+
+    clearBtn.addEventListener('click', () => {
+        fileInput.value = '';
+        fileInfo.textContent = '';
+        uploadBtn.disabled = true;
+        previewBtn.disabled = true;
+        progressBar.style.display = 'none';
+        msgBox.style.display = 'none';
+        previewModal.style.display = 'none';
+        previewContent.innerHTML = '';
+    });
+</script>
+{% endblock %}
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'940c1450f8d16750',t:'MTc0NzQxMTEzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>

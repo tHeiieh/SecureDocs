@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block title %}Documents - SecureDocs{% endblock %}
+
+{% block content %}
+<style>
+  .container-fluid {
+    padding: 100px 20px 60px;
+    position: static !important;
+    overflow: visible !important;
+  }
+  .document-card {
+    background: rgba(44, 62, 80, 0.18);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    padding: 36px 36px 24px 36px;
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(44, 62, 80, 0.18), 0 2px 8px rgba(68, 209, 194, 0.08);
+    border: 1.5px solid rgba(68, 209, 194, 0.13);
+    width: 100%;
+    opacity: 1 !important;
+    position: static !important;
+    overflow: visible !important;
+    transition: box-shadow 0.3s;
+  }
+  .document-card:hover {
+    box-shadow: 0 24px 60px rgba(44, 62, 80, 0.28), 0 4px 16px rgba(68, 209, 194, 0.13);
+  }
+  .document-card h1 {
+    font-size: 2.3rem;
+    font-weight: 800;
+    margin-bottom: 40px;
+    position: relative;
+    text-align: center;
+    color: var(--primary-teal);
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px rgba(44, 62, 80, 0.13);
+  }
+  .document-card h1::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-teal), var(--secondary-blue));
+    margin: 14px auto 0;
+    border-radius: 3px;
+    opacity: 0.7;
+  }
+  .file-entry {
+    background: rgba(56, 100, 102, 0.22);
+    border: 1.5px solid rgba(68, 209, 194, 0.10);
+    border-radius: 18px;
+    padding: 28px 24px;
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    transition: all 0.3s cubic-bezier(.4,2,.6,1);
+    box-shadow: 0 2px 12px rgba(44, 62, 80, 0.08);
+    position: relative;
+  }
+  .file-entry:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 10px 32px rgba(44, 62, 80, 0.18);
+    background: rgba(56, 100, 102, 0.32);
+    border-color: var(--primary-teal);
+  }
+  .file-info {
+    flex: 1 1 320px;
+    min-width: 220px;
+    margin-right: 20px;
+  }
+  .file-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .file-info p {
+    margin: 8px 0 0;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.82);
+    font-weight: 400;
+    letter-spacing: 0.1px;
+  }
+  .file-info i {
+    margin-right: 7px;
+    color: var(--primary-teal);
+    font-size: 1.2em;
+    vertical-align: middle;
+  }
+  .file-actions {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 0;
+    align-items: flex-end;
+    min-width: 180px;
+  }
+  .btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 40px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(.4,2,.6,1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(44, 62, 80, 0.08);
+    letter-spacing: 0.2px;
+  }
+  .btn-primary {
+    background: linear-gradient(45deg, var(--primary-teal), var(--secondary-blue));
+    color: var(--white);
+  }
+  .btn-info {
+    background: linear-gradient(45deg, #5a7f80, var(--secondary-dark));
+    color: var(--white);
+  }
+  .btn-warning {
+    background: linear-gradient(45deg, #ffc107, #ffca2c);
+    color: #222;
+  }
+  .btn-danger {
+    background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+    color: var(--white);
+  }
+  .btn:hover, .btn:focus {
+    opacity: 0.97;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 18px rgba(44, 62, 80, 0.18);
+    outline: none;
+  }
+  .btn i {
+    font-size: 1.15rem;
+  }
+  .no-files {
+    text-align: center;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.82);
+    padding: 32px 0 12px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .no-files i {
+    font-size: 3.2rem;
+    color: var(--primary-teal);
+    opacity: 0.7;
+  }
+  .upload-btn {
+    background: linear-gradient(45deg, var(--primary-teal), var(--secondary-blue));
+    color: var(--white);
+    padding: 13px 28px;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    transition: all 0.3s cubic-bezier(.4,2,.6,1);
+    box-shadow: 0 2px 8px rgba(44, 62, 80, 0.08);
+  }
+  .upload-btn:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 24px rgba(44, 62, 80, 0.18);
+  }
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  @media (max-width: 900px) {
+    .document-card {
+      padding: 18px 6px 12px 6px;
+    }
+    .file-entry {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 18px 10px;
+    }
+    .file-actions {
+      flex-direction: row;
+      gap: 10px;
+      margin-top: 18px;
+      width: 100%;
+      justify-content: flex-start;
+      min-width: 0;
+    }
+    .file-info {
+      margin-right: 0;
+    }
+    .document-card h1 {
+      font-size: 1.5rem;
+    }
+  }
+  /* Edit Modal Styles */
+  .edit-modal .modal-content {
+    background: rgba(56, 100, 102, 0.97);
+    background-clip: padding-box;
+    border-radius: 18px;
+    border: 1.5px solid rgba(255,255,255,0.13);
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(44, 62, 80, 0.22);
+  }
+  .edit-modal .form-label {
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+  }
+  .edit-modal .form-control {
+    background: rgba(0, 0, 0, 0.22);
+    border: 1.5px solid rgba(255, 255, 255, 0.13);
+    color: #fff;
+    font-size: 1rem;
+    border-radius: 10px;
+  }
+  .edit-modal .form-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 0.92em;
+  }
+  .edit-modal .modal-footer {
+    border-top: none;
+    padding-top: 0;
+  }
+  .edit-modal .modal-header {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+</style>
+
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="document-card">
+        <div class="page-header">
+          <h1><i class='bx bx-folder-open'></i> Your Documents</h1>
+          <a href="{{ url_for('upload') }}" class="upload-btn">
+            <i class='bx bx-upload'></i> Upload New
+          </a>
+        </div>
+        {% if files %}
+          {% for file in files %}
+          <div class="file-entry">
+            <div class="file-info">
+              <h3><i class='bx bx-file'></i> {{ file.filename }}</h3>
+              <p><i class='bx bx-calendar'></i> Uploaded: {{ file.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+              {% if file.description %}
+                <p><i class='bx bx-info-circle'></i> {{ file.description }}</p>
+              {% endif %}
+            </div>
+            <div class="file-actions">
+              <a href="{{ url_for('download_file', file_id=file.id) }}" class="btn btn-primary" title="Download">
+                <i class='bx bx-download'></i> Download
+              </a>
+              <a href="{{ url_for('verify_signature', file_id=file.id) }}" class="btn btn-info" title="Verify Signature">
+                <i class='bx bx-check-shield'></i> Verify
+              </a>
+              <!-- Edit Button triggers modal -->
+              <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editFileModal{{ file.id }}" title="Edit">
+                <i class='bx bx-edit'></i> Edit
+              </button>
+              <form action="{{ url_for('delete_file', file_id=file.id) }}" method="POST" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token', '') }}">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this file?')" title="Delete">
+                  <i class='bx bx-trash'></i> Delete
+                </button>
+              </form>
+            </div>
+          </div>
+          <!-- Edit Modal for this file -->
+          <div class="modal fade edit-modal" id="editFileModal{{ file.id }}" tabindex="-1" aria-labelledby="editFileModalLabel{{ file.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content p-4">
+                <form action="{{ url_for('edit_file', file_id=file.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token', '') }}">
+                  <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="editFileModalLabel{{ file.id }}"><i class='bx bx-edit'></i> Edit File</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body pt-0">
+                    <!-- Filename field -->
+                    <div class="mb-4">
+                      <label for="new_filename_{{ file.id }}" class="form-label">File Name (with extension)</label>
+                      <input type="text" class="form-control"
+                             id="new_filename_{{ file.id }}"
+                             name="new_filename"
+                             value="{{ file.filename }}"
+                             required>
+                      <div class="form-text mt-1">
+                        Example: document.pdf, report.docx, notes.txt
+                      </div>
+                    </div>
+                    <!-- Description field -->
+                    <div class="mb-3">
+                      <label for="new_description_{{ file.id }}" class="form-label">Description</label>
+                      <textarea class="form-control"
+                                id="new_description_{{ file.id }}"
+                                name="new_description"
+                                rows="2">{{ file.description or '' }}</textarea>
+                      <div class="form-text">Optional: Add or update a description for this file.</div>
+                    </div>
+                  </div>
+                  <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class='bx bx-save'></i> Save Changes</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="no-files">
+            <i class='bx bx-folder-open'></i>
+            <p>You don't have any documents yet.</p>
+            <a href="{{ url_for('upload') }}" class="btn btn-primary">
+              <i class='bx bx-upload'></i> Upload Your First Document
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Highlight current nav item
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+      if (link.getAttribute('href').includes('list_files')) {
+        link.classList.add('active');
+      }
+    });
+
+    // Remove all animations if they're causing issues
+    const removeAnimations = () => {
+      document.querySelectorAll('.animate__animated').forEach(el => {
+        el.classList.remove('animate_animated', 'animate_fadeIn');
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+      });
+    };
+
+    removeAnimations();
+
+    // GSAP animations
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(".document-card",
+        { opacity: 0, y: 30 },
+        {
+          duration: 1,
+          opacity: 1,
+          y: 0,
+          ease: "power3.out",
+          clearProps: "all"
+        }
+      );
+      const fileEntries = document.querySelectorAll(".file-entry");
+      if (fileEntries.length > 0) {
+        gsap.fromTo(fileEntries,
+          { opacity: 0, y: 20 },
+          {
+            duration: 0.8,
+            opacity: 1,
+            y: 0,
+            stagger: 0.1,
+            ease: "power2.out",
+            delay: 0.3,
+            clearProps: "all"
+          }
+        );
+      }
+    }
+    setTimeout(removeAnimations, 2000);
+
+    // Fix for Bootstrap 5 modal stacking context
+    // Ensure modals are appended to body so they are not hidden by parent stacking context
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+      document.body.appendChild(modal);
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Set Up 2FA - SecureDocs{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card animate_animated animate_fadeIn" style="background: rgba(56, 100, 102, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class='bx bx-lock-alt' style="font-size: 3rem; color: var(--primary-teal);"></i>
+                        <h2 class="mt-3">Set Up 2FA for {{ username }}</h2>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <p class="lead">Scan this QR code with your Google Authenticator app:</p>
+                        <div class="qr-container p-3 mx-auto" style="background: white; width: fit-content; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <img src="{{ qrcode_image }}" alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h4><i class='bx bx-info-circle me-2' style="color: var(--primary-teal);"></i>Setup Instructions</h4>
+                        <ol class="mt-3">
+                            <li class="mb-2">Download the Google Authenticator app if you don't have it.</li>
+                            <li class="mb-2">Open the app and tap "+" to add a new account.</li>
+                            <li class="mb-2">Scan the QR code above.</li>
+                            <li>Once done, return to the login page and enter the 2FA code.</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{{ url_for('login') }}" class="btn btn-primary" style="background-color: var(--primary-teal); border: none;">
+                            <i class='bx bx-right-arrow-alt me-2'></i>Return to Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

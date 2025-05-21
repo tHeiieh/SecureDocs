@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Profile Card with Glassmorphism -->
+            <div class="card animate_animated animate_fadeIn" style="background: rgba(56, 100, 102, 0.2); backdrop-filter: blur(10px); border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);">
+                
+                <!-- Profile Header -->
+                <div class="card-header text-center p-4" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); background: rgba(68, 209, 194, 0.1); border-radius: 15px 15px 0 0;">
+                    <div class="avatar-container mb-3">
+                        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary-teal), var(--secondary-blue)); border-radius: 50%; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+                            <i class='bx bx-user' style="font-size: 3rem; color: var(--white);"></i>
+                        </div>
+                    </div>
+                    <h2 class="card-title text-white" style="font-weight: 700;">Manage Your Profile</h2>
+                    <p class="text-white-50">Update your personal information and security settings</p>
+                </div>
+                
+                <!-- Profile Form -->
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('profile') }}" class="needs-validation" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token', '') }}">
+                        
+                        <!-- Name Input -->
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text" style="background: linear-gradient(90deg, var(--primary-teal), var(--secondary-blue)); border: none; color: white; border-radius: 10px 0 0 10px;">
+                                    <i class='bx bx-user'></i>
+                                </span>
+                                <input type="text" class="form-control bg-dark text-white" id="name" name="name" placeholder="Full Name" value="{{ user.name }}" required style="border: 1px solid rgba(16, 170, 197, 0.3); border-radius: 0 10px 10px 0; height: 48px;">
+                            </div>
+                            <div class="invalid-feedback">Please provide your name.</div>
+                        </div>
+                        
+                        <!-- Email Input -->
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text" style="background: linear-gradient(90deg, var(--primary-teal), var(--secondary-blue)); border: none; color: white; border-radius: 10px 0 0 10px;">
+                                    <i class='bx bx-envelope'></i>
+                                </span>
+                                <input type="email" class="form-control bg-dark text-white" id="email" name="email" placeholder="Email Address" value="{{ user.email }}" required style="border: 1px solid rgba(16, 170, 197, 0.3); border-radius: 0 10px 10px 0; height: 48px;">
+                            </div>
+                            <div class="invalid-feedback">Please provide a valid email.</div>
+                        </div>
+                        
+                        <!-- Password Section -->
+                        <div class="password-section p-3 mb-4" style="background: rgba(0, 0, 0, 0.2); border-radius: 10px;">
+                            <h5 class="mb-3" style="color: var(--primary-teal);">
+                                <i class='bx bx-lock-alt me-2'></i>Change Password
+                            </h5>
+                            
+                            <!-- New Password Input -->
+                            <div class="mb-3 position-relative">
+                                <div class="input-group">
+                                    <span class="input-group-text" style="background: linear-gradient(90deg, var(--primary-teal), var(--secondary-blue)); border: none; color: white; border-radius: 10px 0 0 10px;">
+                                        <i class='bx bx-lock'></i>
+                                    </span>
+                                    <input type="password" class="form-control bg-dark text-white" id="password" name="password" placeholder="New Password (leave blank to keep current)" style="border: 1px solid rgba(16, 170, 197, 0.3); border-radius: 0 10px 10px 0; height: 48px;">
+                                    <button type="button" id="toggle-profile-password" tabindex="-1" style="position:absolute;top:50%;right:15px;transform:translateY(-50%);background:none;border:none;color:#888;font-size:1.2em;z-index:2;" aria-label="Show password">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Confirm Password Input -->
+                            <div class="mb-2 position-relative">
+                                <div class="input-group">
+                                    <span class="input-group-text" style="background: linear-gradient(90deg, var(--primary-teal), var(--secondary-blue)); border: none; color: white; border-radius: 10px 0 0 10px;">
+                                        <i class='bx bx-check-shield'></i>
+                                    </span>
+                                    <input type="password" class="form-control bg-dark text-white" id="password_confirm" name="password_confirm" placeholder="Confirm New Password" style="border: 1px solid rgba(16, 170, 197, 0.3); border-radius: 0 10px 10px 0; height: 48px;">
+                                    <button type="button" id="toggle-profile-password-confirm" tabindex="-1" style="position:absolute;top:50%;right:15px;transform:translateY(-50%);background:none;border:none;color:#888;font-size:1.2em;z-index:2;" aria-label="Show password">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="password-strength mt-2">
+                                <small class="text-white-50">Password should contain at least 8 characters including letters, numbers and special characters</small>
+                                <div class="progress mt-2" style="height: 5px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 0%" id="password-strength-meter"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-lg" style="background: linear-gradient(90deg, var(--primary-teal), var(--secondary-blue)); border: none; border-radius: 10px; transition: all 0.3s; height: 54px;">
+                                <i class='bx bx-save me-2'></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Additional Options -->
+                <div class="card-footer p-4" style="border-top: 1px solid rgba(255, 255, 255, 0.1); background: rgba(0, 0, 0, 0.1); border-radius: 0 0 15px 15px;">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-link text-white-50" style="text-decoration: none;">
+                                <i class='bx bx-arrow-back me-1'></i>Back to Dashboard
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="#" class="btn btn-link text-danger" style="text-decoration: none;" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                <i class='bx bx-trash me-1'></i>Delete Account
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(26, 30, 38, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title text-danger" id="deleteAccountModalLabel">
+                    <i class='bx bx-error-circle me-2'></i>Delete Account
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-white">Are you sure you want to delete your account? This action cannot be undone and all your documents will be permanently deleted.</p>
+                <div class="input-group mb-3">
+                    <span class="input-group-text" style="background: linear-gradient(90deg, var(--primary-teal), var(--secondary-blue)); border: none; color: white; border-radius: 10px 0 0 10px;">
+                        <i class='bx bx-lock'></i>
+                    </span>
+                    <input type="password" class="form-control bg-dark text-white" id="confirmPassword" placeholder="Enter your password to confirm" style="border: 1px solid rgba(16, 170, 197, 0.3); border-radius: 0 10px 10px 0; height: 48px;">
+                </div>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger">Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Page Scripts -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const forms = document.querySelectorAll('.needs-validation');
+        
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+        });
+        
+        // Password strength meter
+        const passwordInput = document.getElementById('password');
+        const strengthMeter = document.getElementById('password-strength-meter');
+        
+        passwordInput.addEventListener('input', function() {
+            const password = passwordInput.value;
+            let strength = 0;
+            
+            if (password.length >= 8) strength += 25;
+            if (password.match(/[A-Z]/)) strength += 25;
+            if (password.match(/[0-9]/)) strength += 25;
+            if (password.match(/[^A-Za-z0-9]/)) strength += 25;
+            
+            strengthMeter.style.width = strength + '%';
+            
+            if (strength <= 25) {
+                strengthMeter.className = 'progress-bar bg-danger';
+            } else if (strength <= 50) {
+                strengthMeter.className = 'progress-bar bg-warning';
+            } else if (strength <= 75) {
+                strengthMeter.className = 'progress-bar bg-info';
+            } else {
+                strengthMeter.className = 'progress-bar bg-success';
+            }
+        });
+        
+        // Show/hide password logic for profile page
+        var pwInput = document.getElementById('password');
+        var pwToggle = document.getElementById('toggle-profile-password');
+        var pwConfirmInput = document.getElementById('password_confirm');
+        var pwConfirmToggle = document.getElementById('toggle-profile-password-confirm');
+        if (pwInput && pwToggle) {
+            pwToggle.addEventListener('click', function() {
+                if (pwInput.type === 'password') {
+                    pwInput.type = 'text';
+                    pwToggle.innerHTML = '<i class="fa fa-eye-slash"></i>';
+                } else {
+                    pwInput.type = 'password';
+                    pwToggle.innerHTML = '<i class="fa fa-eye"></i>';
+                }
+            });
+        }
+        if (pwConfirmInput && pwConfirmToggle) {
+            pwConfirmToggle.addEventListener('click', function() {
+                if (pwConfirmInput.type === 'password') {
+                    pwConfirmInput.type = 'text';
+                    pwConfirmToggle.innerHTML = '<i class="fa fa-eye-slash"></i>';
+                } else {
+                    pwConfirmInput.type = 'password';
+                    pwConfirmToggle.innerHTML = '<i class="fa fa-eye"></i>';
+                }
+            });
+        }
+
+        // GSAP animations if available
+        if (typeof gsap !== 'undefined') {
+            gsap.from('.card', {
+                y: 30,
+                opacity: 0,
+                duration: 1,
+                ease: 'power3.out'
+            });
+            
+            gsap.from('.avatar-container', {
+                scale: 0.5,
+                opacity: 0,
+                duration: 0.8,
+                delay: 0.3,
+                ease: 'back.out(1.7)'
+            });
+            
+            gsap.from('.input-group', {
+                y: 20,
+                opacity: 0,
+                duration: 0.7,
+                stagger: 0.1,
+                delay: 0.5,
+                ease: 'power2.out'
+            });
+        }
+    });
+</script>
+{% endblock %}
